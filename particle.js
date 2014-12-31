@@ -12,29 +12,23 @@
            };
   })();
 
-  var
-    document = window.document,
-    canvasEle = document.querySelector("#line-particle"),
-    context = canvasEle.getContext("2d"),
-    particleNum = 230,
-    propData = [],
-    canvasWidth = 500,
-    canvasHeight = 500,
-    radius = 25,
-    PI = Math.PI,
-    easing = 50;
+  var document = window.document, 
+      canvasEle = document.querySelector("#line-particle"), 
+      context = canvasEle.getContext("2d"), 
+      particleNum = 50, 
+      propData = [], 
+      canvasWidth = 500, 
+      canvasHeight = 500, 
+      radius = 25, 
+      PI = Math.PI, 
+      easing = 50;
 
   var init = function(){
-    var
-     i = 0,
-     len = particleNum,
-     random = Math.random;
+    var i = 0,
+        len = particleNum,
+        random = Math.random;
 
-    canvasWidth = window.innerWidth;
-    canvasHeight = window.innerHeight;
-
-    canvasEle.width = canvasWidth;
-    canvasEle.height = canvasHeight;
+    onWinResize();
 
     for( ; i < len; i ++ ){
       propData[i] = {
@@ -46,6 +40,11 @@
         dy: random() * -4 + 2,
         toX: 1,
         toY: -1,
+
+        bezierR: random() * 300,
+        bezierA: random() * 360,
+        bezierD: (random() > 0.5? 1 : -1),
+        bezierDa: random(),
 
         dr: random() * 360,
         toR: random() * -4 + 2,
@@ -64,22 +63,31 @@
 
   var draw = function(){
 
-    var
-      pData = propData,
-      lo_getDist = getDist,
-      i = 0,
-      len = particleNum,
-      random = Math.random,
-      abs = Math.abs,
-      cos = Math.cos,
-      sin = Math.sin,
-      dist = 150,
-      endR = 360 * PI / 180,
-      lo_getRGB = getRGB,
-      lo_context = context;
+    var pData = propData,
+        lo_getDist = getDist,
+        i = 0,
+        len = particleNum,
+        random = Math.random,
+        abs = Math.abs,
+        cos = Math.cos,
+        sin = Math.sin,
+        dist = 300,
+        endR = 360 * PI / 180,
+        lo_getRGB = getRGB,
+        lo_context = context,
+        gradient;
 
     lo_context.save();
     // lo_context.globalCompositeOperation = "source-over";
+    // var grd = lo_context.createRadialGradient(238, 50, 10, 238, 50, 300);
+    //   // light blue
+    //   grd.addColorStop(0, '#8ED6FF');
+    //   // dark blue
+    //   grd.addColorStop(1, '#004CB3');
+
+      // context.fillStyle = grd;
+
+    // lo_context.clearRect();
     lo_context.fillStyle = "rgba(0, 0, 0, .02)";
     lo_context.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -94,10 +102,24 @@
 
       for(var j = i + 1; j < len; j ++){
         if( dist > lo_getDist( pData[i].x, pData[i].y, pData[j].x, pData[j].y ) ){
+          // gradient = lo_context.createLinearGradient(pData[i].x, pData[i].y, pData[j].x, pData[j].y);
+          // gradient.addColorStop(0, pData[i].color);
+          // gradient.addColorStop(1, pData[j].color);
+          // lo_context.shadowBlur = 20;
+          // lo_context.shadowColor = "red";
           lo_context.strokeStyle = pData[i].color;
           lo_context.beginPath();
           lo_context.moveTo(pData[i].x, pData[i].y);
-          lo_context.lineTo(pData[j].x, pData[j].y);
+          lo_context.bezierCurveTo(
+
+            pData[i].x + cos( pData[i].bezierA * (PI / 180) ) * pData[i].bezierR,
+            pData[i].y + sin( pData[i].bezierA * (PI / 180) ) * pData[i].bezierR,
+            pData[j].x + cos( pData[j].bezierA * (PI / 180) ) * pData[j].bezierR,
+            pData[j].y + sin( pData[j].bezierA * (PI / 180) ) * pData[j].bezierR,
+            pData[j].x,
+            pData[j].y
+          );
+          // lo_context.lineTo(pData[j].x, pData[j].y);
           lo_context.stroke();
         }// if
       }// for
@@ -111,6 +133,7 @@
       pData[i].dy = pData[i].dy + ( pData[i].toY - pData[i].dy ) / easing;
 
       pData[i].color = lo_getRGB( parseInt(++pData[i].rotate % 360, 10), 0.7, 0.5);
+      pData[i].bezierA = (pData[i].bezierA + pData[i].bezierD * pData[i].bezierDa) % 360;
 
       if( abs(pData[i].toX - pData[i].dx) < 0.01 ){
         pData[i].dx = pData[i].toX;
@@ -137,6 +160,9 @@
       }
     }
 
+    lo_context.shadowBlur = 20;
+          lo_context.shadowColor = "red";
+
     lo_context.restore();
     requestAnimationFrame(draw);
   };
@@ -150,21 +176,18 @@
   };
 
   var getRGB = function(h, s, v){
+      var r,
+          g,
+          b,
+          hi = (h / 60) >> 0,
+          f = (h / 60 - hi),
+          p = v * (1 - s),
+          q = v * (1 - f * s),
+          t = v * (1 - (1 - f) * s);
 
     if (s === 0){
       return String("rgb(" + parseInt(v * 255) + "," + parseInt(v * 255) + "," + parseInt(v * 255) + ")");
-    }
-    else {
-      var
-        r,
-        g,
-        b,
-        hi = (h / 60) >> 0,
-        f = (h / 60 - hi),
-        p = v * (1 - s),
-        q = v * (1 - f * s),
-        t = v * (1 - (1 - f) * s);
-
+    } else {
       switch( hi ){
         case 0 :
           r = parseInt(v * 255);
