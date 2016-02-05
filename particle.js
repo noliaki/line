@@ -77,7 +77,7 @@
         lo_context = context,
         gradient;
 
-    lo_context.save();
+    lo_context.restore();
     // lo_context.globalCompositeOperation = "source-over";
     // var grd = lo_context.createRadialGradient(238, 50, 10, 238, 50, 300);
     //   // light blue
@@ -111,7 +111,6 @@
           lo_context.beginPath();
           lo_context.moveTo(pData[i].x, pData[i].y);
           lo_context.bezierCurveTo(
-
             pData[i].x + cos( pData[i].bezierA * (PI / 180) ) * pData[i].bezierR,
             pData[i].y + sin( pData[i].bezierA * (PI / 180) ) * pData[i].bezierR,
             pData[j].x + cos( pData[j].bezierA * (PI / 180) ) * pData[j].bezierR,
@@ -160,10 +159,10 @@
       }
     }
 
-    lo_context.shadowBlur = 20;
-          lo_context.shadowColor = "red";
+    // lo_context.shadowBlur = 20;
+    // lo_context.shadowColor = "red";
 
-    lo_context.restore();
+    lo_context.save();
     requestAnimationFrame(draw);
   };
 
